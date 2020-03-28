@@ -14,10 +14,10 @@ config_version: 1
 datasources:
   files_datasource:
     data_asset_type:
-      module_name:
       class_name: PandasDataset
-    class_name: PandasDatasource
+      module_name:
     module_name:
+    class_name: PandasDatasource
 
 # This config file supports variable substitution which enables: 1) keeping
 # secrets out of source control & 2) environment-based configuration changes
