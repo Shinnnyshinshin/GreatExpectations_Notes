@@ -13,10 +13,10 @@ config_version: 1
 # add a new datasource. Read more at https://docs.greatexpectations.io/en/latest/features/datasource.html
 datasources:
   files_datasource:
-    data_asset_type:
-      class_name: PandasDataset
-      module_name:
     module_name:
+    data_asset_type:
+      module_name:
+      class_name: PandasDataset
     class_name: PandasDatasource
 
 # This config file supports variable substitution which enables: 1) keeping
