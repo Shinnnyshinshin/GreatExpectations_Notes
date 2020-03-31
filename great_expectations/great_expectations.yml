@@ -18,6 +18,12 @@ datasources:
       module_name:
       class_name: PandasDataset
     class_name: PandasDatasource
+  tweets:
+    class_name: PandasDatasource
+    data_asset_type:
+      class_name: CustomPandasDataset
+      module_name: custom_module.custom_dataset
+
 
 # This config file supports variable substitution which enables: 1) keeping
 # secrets out of source control & 2) environment-based configuration changes
