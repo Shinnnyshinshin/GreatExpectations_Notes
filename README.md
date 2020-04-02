@@ -26,31 +26,91 @@ An Expectation is something that is conceptually similar to assertions in Unitte
 DataContext and DataSource
 Writing pipeline tests from scratch can be tedious and counterintuitive. Great Expectations jump starts the process by providing powerful tools for automated data profiling. This provides the double benefit of helping you explore data faster, and capturing knowledge for future documentation and testing.
 
+## Outline of Steps Followed 
 
-## Medium Articles
-There are 3 Medium articles pro
+### Bringing in Data from Twitter
 
- 
+The data that I am using is from my Insight project #OldNews, which batch processed Twitter data to identify hashtags that were decreasing in their popularity.  The initial processing was done using Spark on an Amazon EC2 cluster, but for the case of this demo, I'll be using a local instance of Pyspark to process one small batch of tweets 10-01-2018
 
-
-## Tutorial
-The initial installation of the package is simple enough, with a ```pip install great_expectations``` command.  The next thing they want you to do is run ```great_expectations init``` which creates a new data project. There you specifiy the language you want to use and the data that you want to import.
-
-There is a really nice example project .git that is given by the great_expectations site. It downloads a dataset from the United States Centers for Medicare and Medicaid Services National Provider Identifier Standard (NPI).
-
-Currently the data is arranged in this way :
+After processing using the 'ETL_to_CSV.ipynb' notebook, the data looks like this and is ready for processing. For the sake of this tutorial, I've stored the same data as a csv in the /data folder.
 
 ```SHELL
-/Users/willshin/Development/GreatExpectations_Notes/ge_example_project/data/npidata/npidata_pfile_20190902-20190908.csv
-/Users/willshin/Development/GreatExpectations_Notes/ge_example_project/data/npidata/npidata_pfile_20190909-20190915.csv
++----------------+---------------+-----+
+|         Keyword|           Time|count|
++----------------+---------------+-----+
+|           Wendy|2018-10-1 19:00|    1|
+|GrowingUpSwedish| 2018-10-2 4:00|    1|
+|  IVYSONTOUR2018|2018-10-1 16:00|    1|
+|    mylittlepony|2018-10-1 13:00|    1|
+|          JBAUSA|2018-10-1 17:00|    1|
+|             Now|2018-10-1 22:00|    1|
+|         LULLABY|2018-10-1 18:00|    1|
+|   growthhacking|2018-10-1 23:00|    1|
+|   TheMusicVideo|2018-10-1 23:00|    1|
+|             EXO|2018-10-1 20:00|    1|
++----------------+---------------+-----+
+```
 
+Using GreatExpectations, I'm trying to do 2 very simple checks. First, are all of my keywords in English (I've already filtered for language 'en' in the tweets, but I'm not sure if it's working perfectly). Second, I also want to know how many tweets per batch have greater than 1 occurance. This would give me a better idea as to how much 'new' information I am adding to my database each day. 
+
+### Creating an Expectation Suite
+I first created a new empty expectation
+```SHELL
+    great_expectations suite new --empty
+```
+
+### Customizing the Expectation Itself 
+
+```PYTHON
+from great_expectations.dataset import PandasDataset, MetaPandasDataset
+
+
+# -*- coding: utf-8 -*-
+def isEnglish(s):
+    try:
+        s.encode(encoding='utf-8').decode('ascii')
+    except UnicodeDecodeError:
+        return False
+    else:
+        return True
+        
+
+class CustomPandasDataset(PandasDataset):
+
+    _data_asset_type = "CustomPandasDataset"
+
+    @MetaPandasDataset.column_map_expectation
+    def expect_column_to_be_english(self, column):
+        return column.map(isEnglish)
+        
+    @MetaPandasDataset.column_map_expectation
+    def expect_count_to_be_1(self, column):
+        return column.map(lambda x: x==1)
 ```
 
 
 
-## Overall structure
+```YML
+datasources:
+  files_datasource:
+    module_name:
+    data_asset_type:
+      module_name:
+      class_name: PandasDataset
+    class_name: PandasDatasource
+  tweets:
+    class_name: PandasDatasource
+    data_asset_type:
+      class_name: CustomPandasDataset
+      module_name: custom_module.custom_dataset
+```
 
-## What is the structure of the code?
+### Running the Code
+
+### Results
 
 
-## Tasks that I might be able to tackle
+## Next Steps
+
+* Add aom
+* Is there any feature that can incorporate stream data? How would the structure of the code have to change in order for this to happen?
