@@ -101,8 +101,14 @@ class CustomPandasDataset(PandasDataset):
 ```
 
 ### Results
-The results of this code 
+The results of this code are the following two images from ```validation_playground.ipynb``` Notebook in the ```notebooks/pandas``` folder. 
+![Expectation1](pics/Expectation1.png)
 
+We see that around 5% of total processed hashtags are non-English, which actually isn't as bad as I thought. 
+
+![Expectation2](pics/Expectation2.png)
+
+We also observe that around 90% of total hashtags for each day are unique, which means we may need to sample more of the total dataset, or increase the throughput of the pipeline. 
 
 ## Next Steps and Remaining Questions
 * Add some sort of test with a relational database to get my feet wet. 
