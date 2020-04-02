@@ -1,11 +1,6 @@
 # Overview
 
-This document is so that I can understand the structure behind Great Expectations is that I have to understand the structure of the code and what it does.
-
-https://docs.greatexpectations.io/en/latest/intro.html
-
-
-### Here are the list of things that Great Expectations can do, according to the Introduction.
+### Here are the list of things that Great Expectations can do, according to their Introduction page.
 * Save time during data cleaning and munging.
 * Accelerate ETL and data normalization.
 * Streamline analyst-to-engineer handoffs.
@@ -26,14 +21,10 @@ An Expectation is something that is conceptually similar to assertions in Unitte
 DataContext and DataSource
 Writing pipeline tests from scratch can be tedious and counterintuitive. Great Expectations jump starts the process by providing powerful tools for automated data profiling. This provides the double benefit of helping you explore data faster, and capturing knowledge for future documentation and testing.
 
-## Outline of Steps Followed 
-
 ### Bringing in Data from Twitter
-
 The data that I am using is from my Insight project #OldNews, which batch processed Twitter data to identify hashtags that were decreasing in their popularity.  The initial processing was done using Spark on an Amazon EC2 cluster, but for the case of this demo, I'll be using a local instance of Pyspark to process one small batch of tweets 10-01-2018
 
 After processing using the 'ETL_to_CSV.ipynb' notebook, the data looks like this and is ready for processing. For the sake of this tutorial, I've stored the same data as a csv in the /data folder.
-
 ```SHELL
 +----------------+---------------+-----+
 |         Keyword|           Time|count|
@@ -54,12 +45,33 @@ After processing using the 'ETL_to_CSV.ipynb' notebook, the data looks like this
 Using GreatExpectations, I'm trying to do 2 very simple checks. First, are all of my keywords in English (I've already filtered for language 'en' in the tweets, but I'm not sure if it's working perfectly). Second, I also want to know how many tweets per batch have greater than 1 occurance. This would give me a better idea as to how much 'new' information I am adding to my database each day. 
 
 ### Creating an Expectation Suite
-I first created a new empty expectation
+I first created a new empty expectation suite, and named it 'IsMyKeyWordEnglish_Custom'
 ```SHELL
     great_expectations suite new --empty
 ```
-
 ### Customizing the Expectation Itself 
+Creating a custom expecation first requires making a custom module in the ```\great_expectations\plugins\modules``` directory and modifying the great_expectations.yml file to make sure the suite knows about it.
+
+First here is how the datasources section changed for the ```great_expectations.yml``` file.
+
+```YML
+datasources:
+  files_datasource:
+    module_name:
+    data_asset_type:
+      module_name:
+      class_name: PandasDataset
+    class_name: PandasDatasource
+  tweets:
+    class_name: PandasDatasource
+    data_asset_type:
+      class_name: CustomPandasDataset
+      module_name: custom_module.custom_dataset
+```
+
+You'll notice there is a new datasource called ```tweets```. It is a PandasDatasource, since that is how I am processing the file, and the data_asset_type is associated with a CustomPandasDataset with a module. The module name is set as ```custom_module.custom_dataset``` which is where my code lives in the ```\great_expectations\plugins\modules``` folder.
+
+Next is the code that actually lives in the ```custom_module.custom_dataset``` module. The Expectation to check whether or not the Keyword field is english is a simple conversion. The program attempts to encode the string into utf-8 and decode in ascii. If it fails then it is not an english hashtag. It will miss things like emojis, and a more 'sophisticated' version may be added in a later version. You'll notice that, as per the GreatExpectations documentation, I've created a CustomPandasDatset class that extends PandasDataset object.  It also had the ```@MetaPandasDataset.column_map_expectation``` decorator for each of the functions, and then returns a ```True``` or ```False``` value depending on whether or not the Expectation is met. 
 
 ```PYTHON
 from great_expectations.dataset import PandasDataset, MetaPandasDataset
@@ -88,29 +100,10 @@ class CustomPandasDataset(PandasDataset):
         return column.map(lambda x: x==1)
 ```
 
-
-
-```YML
-datasources:
-  files_datasource:
-    module_name:
-    data_asset_type:
-      module_name:
-      class_name: PandasDataset
-    class_name: PandasDatasource
-  tweets:
-    class_name: PandasDatasource
-    data_asset_type:
-      class_name: CustomPandasDataset
-      module_name: custom_module.custom_dataset
-```
-
-### Running the Code
-
 ### Results
+The results of this code 
 
 
-## Next Steps
-
-* Add aom
+## Next Steps and Remaining Questions
+* Add some sort of test with a relational database to get my feet wet. 
 * Is there any feature that can incorporate stream data? How would the structure of the code have to change in order for this to happen?
